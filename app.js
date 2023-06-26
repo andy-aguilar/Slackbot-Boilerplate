@@ -1,30 +1,35 @@
+import getHeadlines from 'headlines';
 require('dotenv').config({path: __dirname + '/.env'})
 
-const express = require('express')
-const app = express()
+const { App } = require('@slack/bolt');
 
-const PORT = process.env.PORT || 3000
-
-const eventsApi = require('@slack/events-api')
-const slackEvents = eventsApi.createEventAdapter(process.env.SLACK_SIGNING_SECRET)
-
-const token = process.env.SLACK_BOT_TOKEN
-
-const { WebClient, LogLevel } = require("@slack/web-api");
-const client = new WebClient(token, {
-    logLevel: LogLevel.DEBUG
+const app = new App({
+  signingSecret: process.env.SLACK_SIGNING_SECRET,
+  token: process.env.SLACK_BOT_TOKEN,
+  socketMode: true,
+  appToken: process.env.SLACK_APP_TOKEN,
+  port: process.env.PORT || 3000,
 });
 
-app.use('/', slackEvents.expressMiddleware())
+/* Add functionality here */
+app.event('app_mention', async ({ event, context, client, say }) => {
+  if (event.text) {
+    const [ command, data ] = event.text.split(' ');
 
-slackEvents.on('message', async (event) => {
-    console.log(event)
-    const channel = event.channel
-    if(!event.bot_profile){
-        client.chat.postMessage({channel, token, text: "Test recieved!"})
+    switch (command.toLowerCase()) {
+      case 'headlines':
+         
+        break;
+    
+      default:
+        break;
     }
-})
+  }
+  await say(`Hello, <@${event.user}>! 🎉 It works!`);
+});
 
-app.listen(PORT, () => {
-    console.log(`App listening at http://localhost:${PORT}`)
-})
+(async () => {
+  // Start the app
+  await app.start();
+  console.log('⚡️ Bolt app is running!');
+})();
